@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+<meta name="theme-color" content="#090a0e" />
+<title>SilentFlow RU</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Inter,system-ui,sans-serif;color-scheme:dark;--bg:#090a0e;--card:#12141b;--line:#232630;--muted:#9297a8;--accent:#f2f5ff;--danger:#ff7c86;--ok:#84e3a8}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent} body{margin:0;background:radial-gradient(circle at 50% -20%,#20283d 0,#0c0e14 38%,var(--bg) 65%);color:white;min-height:100dvh}
+.app{width:min(100%,540px);margin:0 auto;padding:18px 16px calc(30px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:flex-start;justify-content:space-between;margin:5px 2px 16px}.brand h1{font-size:30px;line-height:1;margin:0;letter-spacing:-1.1px}.brand p{margin:7px 0 0;color:var(--muted);font-size:14px}.badge{font-size:12px;font-weight:700;border:1px solid #303544;background:#151924;padding:7px 10px;border-radius:999px;color:#d7dbea}
+.camera{position:relative;overflow:hidden;border-radius:30px;background:#15171f;aspect-ratio:3/4;border:1px solid #232735;box-shadow:0 24px 70px #0009}video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:block}.shade{position:absolute;inset:0;background:linear-gradient(180deg,#0006 0,transparent 18%,transparent 70%,#000b 100%);pointer-events:none}.face{position:absolute;left:50%;top:49%;transform:translate(-50%,-50%);width:61%;height:52%;border:1.5px solid #ffffff35;border-radius:48% 48% 43% 43%}.mouth{position:absolute;left:50%;top:59%;transform:translate(-50%,-50%);width:39%;height:15%;border:2px solid #ffffffb0;border-radius:999px;box-shadow:0 0 0 999px #0000}.hint{position:absolute;left:14px;right:14px;top:14px;display:flex;justify-content:center}.status{max-width:92%;background:#07080dbb;border:1px solid #ffffff17;backdrop-filter:blur(15px);padding:9px 13px;border-radius:999px;font-size:13px;text-align:center}.timer{position:absolute;right:15px;bottom:16px;background:#08090dcc;padding:7px 10px;border-radius:999px;font-variant-numeric:tabular-nums;font-size:13px}.recDot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff5c68;margin-right:7px;vertical-align:1px;animation:pulse 1.1s infinite}@keyframes pulse{50%{opacity:.35}}
+.controls{display:grid;grid-template-columns:1.5fr 1fr;gap:10px;margin-top:13px}.btn{appearance:none;border:0;border-radius:18px;min-height:54px;padding:0 16px;font-size:16px;font-weight:700}.primary{background:var(--accent);color:#08090d}.secondary{background:#181b24;color:white;border:1px solid #272b37}.btn:disabled{opacity:.42}.recording{background:#ffedf0;color:#6e111a}
+.card{margin-top:14px;background:#11131aeb;border:1px solid var(--line);border-radius:23px;padding:16px}.cardTitle{font-size:13px;color:var(--muted);margin-bottom:9px}.result{min-height:90px;font-size:19px;line-height:1.38;white-space:pre-wrap}.placeholder{color:#656b7b}.row{display:flex;gap:9px;margin-top:12px}.row .btn{flex:1;min-height:46px;font-size:14px}.notice{font-size:12px;line-height:1.5;color:#858b9b;margin-top:10px}.notice strong{color:#d2d6e1}.ok{color:var(--ok)}.error{color:#ff9aa3}
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:#0d0f15;border:1px solid var(--line);padding:4px;border-radius:16px;margin-bottom:14px}.tab{border:0;background:transparent;color:#9298a7;border-radius:12px;padding:10px;font-size:14px;font-weight:700}.tab.active{background:#222632;color:white}.hidden{display:none!important}.phrase{font-size:21px;line-height:1.3;margin:5px 0 11px}.progress{color:#858b9b;font-size:12px}.settings summary{cursor:pointer;font-weight:700;font-size:14px;list-style:none}.settings summary::-webkit-details-marker{display:none}.settings input{width:100%;margin-top:10px;background:#090b10;border:1px solid #292d39;border-radius:14px;padding:13px;color:white;font-size:16px}.small{font-size:11px;color:#727888;line-height:1.45}.model{display:flex;gap:9px;align-items:flex-start;margin-top:10px;background:#0b0d12;border:1px solid #20232d;border-radius:15px;padding:11px}.modelIcon{font-size:20px}.model b{display:block;font-size:13px}.model span{display:block;color:#858b9b;font-size:11px;line-height:1.4;margin-top:2px}
+</style>
+</head>
+<body>
+<div class="app">
+<header><div class="brand"><h1>SilentFlow</h1><p>Молча говоришь → получаешь русский текст</p></div><div class="badge">RU ONLY</div></header>
+<div class="camera">
+  <video id="video" autoplay muted playsinline></video>
+  <div class="shade"></div><div class="face"></div><div class="mouth"></div>
+  <div class="hint"><div class="status" id="status">Нажми «Разрешить камеру»</div></div>
+  <div class="timer hidden" id="timer">00:00</div>
+</div>
+<div class="controls">
+  <button class="btn primary" id="recordBtn">Разрешить камеру</button>
+  <button class="btn secondary" id="flipBtn">↻ Камера</button>
+</div>
+
+<div class="card">
+  <div class="tabs"><button class="tab active" data-tab="recognition">Распознавание</button><button class="tab" data-tab="calibration">Калибровка</button></div>
+  <section id="recognition">
+    <div class="cardTitle">Русский текст</div>
+    <div class="result placeholder" id="result">После записи здесь появится результат.</div>
+    <div class="row"><button class="btn secondary" id="recognizeBtn" disabled>Распознать</button><button class="btn secondary" id="copyBtn" disabled>Копировать</button></div>
+    <div class="notice" id="recognitionNotice">Записывается <strong>только видео</strong> — микрофон для распознавания не используется.</div>
+  </section>
+  <section id="calibration" class="hidden">
+    <div class="progress" id="calProgress"></div>
+    <div class="phrase" id="phrase"></div>
+    <div class="notice">Произнеси эту фразу чётко и без звука. После записи можно скачать клип — это данные для персональной адаптации модели под твою артикуляцию.</div>
+    <div class="row"><button class="btn secondary" id="saveBtn" disabled>Скачать запись</button><button class="btn secondary" id="nextBtn">Следующая</button></div>
+  </section>
+</div>
+
+<details class="card settings">
+  <summary>⚙️ Настройки модели</summary>
+  <input id="endpoint" placeholder="https://.../transcribe" autocapitalize="off" autocomplete="off" />
+  <input id="context" value="вайбкодинг, приложение, интерфейс, код, ошибка, GitHub, SwiftUI, API, база данных, авторизация" />
+  <div class="model"><div class="modelIcon">🧠</div><div><b>Целевая модель: AV‑HuBERT MuAViC RU</b><span>Русский checkpoint подключается отдельным GPU backend. Vercel используется для интерфейса и HTTPS.</span></div></div>
+  <p class="small">Endpoint хранится только в этом браузере. Формат запроса: multipart/form-data с полями video, language=ru, context. Ответ: JSON {"text":"...","raw":"..."}.</p>
+</details>
+</div>
+<script>
+const $=q=>document.querySelector(q);
+const phrases=[
+'Создай новый проект на русском языке','Исправь ошибку в этом коде','Сделай экран авторизации','Добавь кнопку на главный экран','Подключи базу данных','Создай API для приложения','Сделай интерфейс более современным','Добавь тёмную тему','Сохрани изменения в GitHub','Проверь почему приложение не запускается','Создай форму регистрации','Добавь поиск по списку','Покажи сообщение об ошибке','Сделай адаптацию для айфона','Добавь загрузку фотографии','Создай страницу настроек','Подключи авторизацию пользователя','Оптимизируй этот код','Объясни почему возникает ошибка','Сделай приложение быстрее'
+];
+let stream=null,recorder=null,chunks=[],blob=null,isRecording=false,facing='user',startedAt=0,timerInt=null,phraseIndex=0,currentTab='recognition';
+const endpointInput=$('#endpoint'); endpointInput.value=localStorage.getItem('silentflow_endpoint')||''; endpointInput.oninput=()=>localStorage.setItem('silentflow_endpoint',endpointInput.value.trim());
+function setStatus(t,cls=''){const s=$('#status');s.textContent=t;s.className='status '+cls}
+async function ensureCamera(){
+  if(stream)return true;
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing,width:{ideal:1280},height:{ideal:960},frameRate:{ideal:25,max:30}},audio:false});$('#video').srcObject=stream;setStatus('Готово • говори без звука');$('#recordBtn').textContent='👄 Начать фразу';return true}catch(e){setStatus('Не удалось открыть камеру','error');return false}
+}
+function mime(){const types=['video/mp4;codecs=h264','video/mp4','video/webm;codecs=vp8','video/webm'];return types.find(t=>window.MediaRecorder&&MediaRecorder.isTypeSupported(t))||''}
+async function toggleRecord(){
+ if(!stream){await ensureCamera();return}
+ if(!isRecording){blob=null;chunks=[];const mt=mime();try{recorder=new MediaRecorder(stream,mt?{mimeType:mt}:undefined)}catch(e){recorder=new MediaRecorder(stream)}recorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};recorder.start(250);isRecording=true;startedAt=Date.now();$('#recordBtn').textContent='■ Закончить';$('#recordBtn').classList.add('recording');$('#timer').classList.remove('hidden');setStatus('Читаю губы…');timerInt=setInterval(updateTimer,250);updateTimer();}
+ else{await stopRecord()}
+}
+function updateTimer(){let s=Math.floor((Date.now()-startedAt)/1000);$('#timer').textContent=`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;if(s>=15)stopRecord()}
+function stopRecord(){return new Promise(resolve=>{if(!recorder||recorder.state==='inactive')return resolve();recorder.onstop=()=>{clearInterval(timerInt);isRecording=false;$('#recordBtn').classList.remove('recording');$('#recordBtn').textContent='👄 Начать фразу';$('#timer').classList.add('hidden');blob=new Blob(chunks,{type:recorder.mimeType||'video/mp4'});$('#recognizeBtn').disabled=false;$('#saveBtn').disabled=false;setStatus('Запись готова');if(currentTab==='recognition'){const r=$('#result');r.textContent='Запись готова. Нажми «Распознать».';r.classList.add('placeholder')}resolve(blob)};recorder.stop()})}
+async function flipCamera(){if(isRecording)return;facing=facing==='user'?'environment':'user';if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}await ensureCamera()}
+async function recognize(){
+ if(!blob)return;const endpoint=endpointInput.value.trim();const r=$('#result');
+ if(!endpoint){r.textContent='Русская модель ещё не подключена к GPU‑endpoint. Камера и запись уже работают; следующий шаг — развернуть AV‑HuBERT MuAViC RU.';r.classList.remove('placeholder');$('#recognitionNotice').innerHTML='<span class="ok">✓ Видео записано корректно.</span> Для настоящего чтения губ нужен GPU backend.';return}
+ $('#recognizeBtn').disabled=true;setStatus('Распознаю русский…');r.textContent='Обрабатываю видео…';r.classList.add('placeholder');
+ try{const fd=new FormData();const ext=blob.type.includes('webm')?'webm':'mp4';fd.append('video',blob,'silentflow.'+ext);fd.append('language','ru');fd.append('context',$('#context').value);const resp=await fetch(endpoint,{method:'POST',body:fd});if(!resp.ok)throw new Error('HTTP '+resp.status+' '+await resp.text());const data=await resp.json();r.textContent=data.text||data.transcript||'Модель не вернула текст';r.classList.remove('placeholder');$('#copyBtn').disabled=!r.textContent;setStatus('Готово • русский','ok')}catch(e){r.textContent='Ошибка модели: '+e.message;r.classList.remove('placeholder');setStatus('Не удалось распознать','error')}finally{$('#recognizeBtn').disabled=false}
+}
+function saveCalibration(){if(!blob)return;const ext=blob.type.includes('webm')?'webm':'mp4';const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`silentflow_ru_${String(phraseIndex+1).padStart(2,'0')}.${ext}`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function showPhrase(){phraseIndex=(phraseIndex+phrases.length)%phrases.length;$('#calProgress').textContent=`Фраза ${phraseIndex+1} из ${phrases.length}`;$('#phrase').textContent=phrases[phraseIndex];blob=null;$('#saveBtn').disabled=true}
+function switchTab(name){currentTab=name;document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));$('#recognition').classList.toggle('hidden',name!=='recognition');$('#calibration').classList.toggle('hidden',name!=='calibration');if(name==='calibration')showPhrase()}
+$('#recordBtn').onclick=toggleRecord;$('#flipBtn').onclick=flipCamera;$('#recognizeBtn').onclick=recognize;$('#copyBtn').onclick=async()=>{await navigator.clipboard.writeText($('#result').textContent);setStatus('Скопировано')};$('#saveBtn').onclick=saveCalibration;$('#nextBtn').onclick=()=>{phraseIndex++;showPhrase()};document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));showPhrase();
+if(!navigator.mediaDevices?.getUserMedia){setStatus('Этот браузер не поддерживает камеру','error');$('#recordBtn').disabled=true}
+</script>
+</body>
+</html>
